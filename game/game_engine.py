@@ -5,7 +5,7 @@ from .ball import Ball
 WHITE = (255, 255, 255)
 
 class GameEngine:
-    def __init__(self, width, height):
+    def __init__(self, width, height, paddle_sound, wall_sound, score_sound):
         self.width = width
         self.height = height
         self.paddle_width = 10
@@ -13,12 +13,14 @@ class GameEngine:
 
         self.player = Paddle(10, height // 2 - 50, self.paddle_width, self.paddle_height)
         self.ai = Paddle(width - 20, height // 2 - 50, self.paddle_width, self.paddle_height)
-        self.ball = Ball(width // 2, height // 2, 7, 7, width, height)
+        self.ball = Ball(width // 2, height // 2, 7, 7, width, height, paddle_sound, wall_sound)
 
         self.player_score = 0
         self.ai_score = 0
         self.font = pygame.font.SysFont("Arial", 30)
         self.target_score = 5  # default to 5 points
+
+        self.score_sound = score_sound
 
     def handle_input(self):
         keys = pygame.key.get_pressed()
@@ -35,9 +37,11 @@ class GameEngine:
         if self.ball.x <= 0:
             self.ai_score += 1
             self.ball.reset()
+            self.score_sound.play()
         elif self.ball.x >= self.width:
             self.player_score += 1
             self.ball.reset()
+            self.score_sound.play()
 
         # Move AI paddle
         self.ai.auto_track(self.ball, self.height)
@@ -56,24 +60,20 @@ class GameEngine:
         screen.blit(ai_text, (self.width * 3 // 4, 20))
 
     def check_game_over(self, screen):
-        # Game over condition
         if self.player_score == self.target_score or self.ai_score == self.target_score:
             winner = "Player Wins!" if self.player_score == self.target_score else "AI Wins!"
             text = self.font.render(winner, True, WHITE)
-
-            # Draw winner
             screen.blit(text, (self.width // 2 - text.get_width() // 2,
                                self.height // 2 - text.get_height() // 2))
             pygame.display.flip()
             pygame.time.delay(2000)
 
-            # Replay options
             result = self.show_replay_menu(screen)
             if result is not None:
                 self.reset_game(result)
-                return False  # continue game
+                return False
             else:
-                return True  # exit game
+                return True
         return False
 
     def show_replay_menu(self, screen):
@@ -100,17 +100,17 @@ class GameEngine:
                     return None
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_3:
-                        return 2  # first to 2 wins (best of 3)
+                        return 2
                     elif event.key == pygame.K_5:
-                        return 3  # first to 3 wins (best of 5)
+                        return 3
                     elif event.key == pygame.K_7:
-                        return 4  # first to 4 wins (best of 7)
+                        return 4
                     elif event.key == pygame.K_ESCAPE:
                         return None
 
     def reset_game(self, new_target):
-        """Reset scores, ball, and target score for a new round."""
         self.player_score = 0
         self.ai_score = 0
         self.target_score = new_target
-        self.ball = Ball(self.width // 2, self.height // 2, 7, 7, self.width, self.height)
+        self.ball = Ball(self.width // 2, self.height // 2, 7, 7, self.width, self.height,
+                         self.ball.paddle_sound, self.ball.wall_sound)

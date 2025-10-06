@@ -1,8 +1,14 @@
 import pygame
 from game.game_engine import GameEngine
 
-# Initialize pygame / Start application
+# Initialize pygame / mixer
 pygame.init()
+pygame.mixer.init()
+
+# Load sounds
+paddle_sound = pygame.mixer.Sound("sounds/paddle_hit.wav")
+wall_sound = pygame.mixer.Sound("sounds/wall_bounce.wav")
+score_sound = pygame.mixer.Sound("sounds/score.wav")
 
 # Screen dimensions
 WIDTH, HEIGHT = 800, 600
@@ -18,7 +24,7 @@ clock = pygame.time.Clock()
 FPS = 60
 
 # Game engine
-engine = GameEngine(WIDTH, HEIGHT)
+engine = GameEngine(WIDTH, HEIGHT, paddle_sound, wall_sound, score_sound)
 
 def main():
     running = True
@@ -29,16 +35,10 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Handle player input
         engine.handle_input()
-
-        # Update game state
         engine.update()
-
-        # Render objects
         engine.render(SCREEN)
 
-        # Check if game over (returns True if player exits)
         if engine.check_game_over(SCREEN):
             running = False
 
@@ -46,7 +46,6 @@ def main():
         clock.tick(FPS)
 
     pygame.quit()
-
 
 if __name__ == "__main__":
     main()
